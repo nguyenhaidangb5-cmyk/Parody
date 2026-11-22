@@ -1,5 +1,6 @@
 // ===== Nhân vật stylized dựng hoàn toàn bằng code, có khung xương và hoạt ảnh thủ tục =====
-import { useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Emote, Look, NpcAnim } from '../game/types';
@@ -59,6 +60,7 @@ export function Character({
   extraAcc?: string[];
   showBubble?: boolean;
 }) {
+  const rootRef = useRef<THREE.Group>(null!);
   const body = useRef<THREE.Group>(null!);
   const hips = useRef<THREE.Group>(null!);
   const spine = useRef<THREE.Group>(null!);
@@ -112,6 +114,13 @@ export function Character({
     ];
     return new THREE.LatheGeometry(pts, 20);
   }, [build]);
+
+  // Gộp các bộ phận cứng trong từng khớp xương thành 1 mesh (vertex color) để giảm draw call
+  useLayoutEffect(() => {
+    rootRef.current?.traverse((o) => {
+      if ((o as THREE.Group).isGroup) bakeGroup(o as THREE.Group);
+    });
+  }, []);
 
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05);
@@ -337,7 +346,7 @@ export function Character({
   const hasBeanie = acc.has('beanie');
 
   return (
-    <group scale={[h, h, h]}>
+    <group ref={rootRef} scale={[h, h, h]}>
       <group ref={body}>
         <group ref={hips} position={[0, hipY, 0]}>
           {/* Hông */}
@@ -405,8 +414,8 @@ export function Character({
                   ))}
                 </group>
                 {/* lông mày */}
-                <mesh ref={browL} geometry={G.capsule(0.011, 0.05)} material={mat(browCol)} position={[0.085, 0.272, 0.2]} rotation={[0, 0, Math.PI / 2]} />
-                <mesh ref={browR} geometry={G.capsule(0.011, 0.05)} material={mat(browCol)} position={[-0.085, 0.272, 0.2]} rotation={[0, 0, Math.PI / 2]} />
+                <mesh ref={browL} userData={{ dyn: true }} geometry={G.capsule(0.011, 0.05)} material={mat(browCol)} position={[0.085, 0.272, 0.2]} rotation={[0, 0, Math.PI / 2]} />
+                <mesh ref={browR} userData={{ dyn: true }} geometry={G.capsule(0.011, 0.05)} material={mat(browCol)} position={[-0.085, 0.272, 0.2]} rotation={[0, 0, Math.PI / 2]} />
                 {/* mũi */}
                 <Part g={G.sphere(0.022, 10, 8)} color={skinDark} p={[0, 0.15, 0.228]} s={[1, 0.8, 0.8]} />
                 {/* má hồng */}
@@ -415,10 +424,10 @@ export function Character({
                     <Part key={s} g={G.sphere(0.035, 10, 8)} m={mat('#ff8a8a', { transparent: true, opacity: 0.38 })} p={[0.135 * s, 0.125, 0.175]} s={[1, 0.6, 0.4]} />
                   ))}
                 {/* miệng */}
-                <mesh ref={mouthSmile} geometry={G.torus(0.032, 0.008, Math.PI, 6, 12)} material={mat('#7a2f2f')} position={[0, 0.098, 0.198]} rotation={[0.25, 0, Math.PI]} />
-                <mesh ref={mouthBig} geometry={G.sphere(0.04, 14, 10, )} material={mat('#7a2f2f')} position={[0, 0.095, 0.19]} scale={[1, 0.6, 0.4]} visible={false} />
-                <mesh ref={mouthO} geometry={G.sphere(0.022, 12, 8)} material={mat('#5a1f24')} position={[0, 0.092, 0.198]} visible={false} />
-                <mesh ref={mouthFlat} geometry={G.capsule(0.007, 0.04)} material={mat('#7a2f2f')} position={[0, 0.098, 0.2]} rotation={[0, 0, Math.PI / 2]} visible={false} />
+                <mesh ref={mouthSmile} userData={{ dyn: true }} geometry={G.torus(0.032, 0.008, Math.PI, 6, 12)} material={mat('#7a2f2f')} position={[0, 0.098, 0.198]} rotation={[0.25, 0, Math.PI]} />
+                <mesh ref={mouthBig} userData={{ dyn: true }} geometry={G.sphere(0.04, 14, 10, )} material={mat('#7a2f2f')} position={[0, 0.095, 0.19]} scale={[1, 0.6, 0.4]} visible={false} />
+                <mesh ref={mouthO} userData={{ dyn: true }} geometry={G.sphere(0.022, 12, 8)} material={mat('#5a1f24')} position={[0, 0.092, 0.198]} visible={false} />
+                <mesh ref={mouthFlat} userData={{ dyn: true }} geometry={G.capsule(0.007, 0.04)} material={mat('#7a2f2f')} position={[0, 0.098, 0.2]} rotation={[0, 0, Math.PI / 2]} visible={false} />
                 {acc.has('mustache') && (
                   <>
                     <Part g={G.capsule(0.017, 0.05)} color="#3b3b3b" p={[0.035, 0.125, 0.215]} r={[0, 0, Math.PI / 2 - 0.25]} />
@@ -693,4 +702,41 @@ function Hair({ look }: { look: Look }) {
     }
   }
   return base;
+}
+
+// ---------------- Gộp mesh theo khớp ----------------
+const bakedMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0 });
+function bakeGroup(group: THREE.Group) {
+  const meshes = group.children.filter((c) => {
+    const m = c as THREE.Mesh;
+    if (!m.isMesh || m.userData.dyn || m.userData.baked || !m.visible) return false;
+    const mt = m.material as THREE.MeshStandardMaterial;
+    return !Array.isArray(mt) && !mt.transparent && mt.metalness < 0.3 && mt.emissive.getHex() === 0 && mt.side === THREE.FrontSide;
+  }) as THREE.Mesh[];
+  if (meshes.length < 2) return;
+  const geos: THREE.BufferGeometry[] = [];
+  for (const m of meshes) {
+    m.updateMatrix();
+    let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
+    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k);
+    g.applyMatrix4(m.matrix);
+    const c = (m.material as THREE.MeshStandardMaterial).color;
+    const n = g.attributes.position.count;
+    const col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      col[i * 3] = c.r;
+      col[i * 3 + 1] = c.g;
+      col[i * 3 + 2] = c.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geos.push(g);
+  }
+  const merged = mergeGeometries(geos, false);
+  geos.forEach((g) => g.dispose());
+  if (!merged) return;
+  const mesh = new THREE.Mesh(merged, bakedMat);
+  mesh.userData.baked = true;
+  mesh.castShadow = meshes.some((m) => m.castShadow);
+  for (const m of meshes) m.visible = false;
+  group.add(mesh);
 }

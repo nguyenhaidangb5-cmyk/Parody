@@ -225,10 +225,10 @@ function HallBanner() {
   }, [st?.text, st?.bg]);
   const [bx, bz] = POS.banner;
   if (!tex) {
-    return <mesh geometry={G.cyl(0.12, 0.12, 6.6, 12)} material={mat('#5f3dc4')} position={[bx, 3.05, bz]} rotation={[0, 0, Math.PI / 2]} />;
+    return <mesh key="rolled" geometry={G.cyl(0.12, 0.12, 6.6, 12)} material={mat('#5f3dc4')} position={[bx, 3.05, bz]} rotation={[0, 0, Math.PI / 2]} />;
   }
   return (
-    <mesh position={[bx, 2.75, bz]}>
+    <mesh key="flat" position={[bx, 2.75, bz]}>
       <planeGeometry args={[7.6, 0.95]} />
       <meshStandardMaterial map={tex} side={THREE.DoubleSide} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.15} />
     </mesh>

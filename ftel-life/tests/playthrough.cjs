@@ -374,7 +374,7 @@ async function solveMinigame(page, career, wait) {
   } else {
     // sắp xếp bằng nút ▲ (bubble sort theo đáp án)
     const ORDER = ['Xác định mục tiêu', 'Trình duyệt ngân sách', 'Đặt hội trường', 'Thiết kế và gửi thư mời', 'Viết kịch bản MC', 'Tổng duyệt', 'Tổ chức sự kiện'];
-    await page.click('text=Kiểm tra');
+    await page.click('.mg-foot button:has-text("Kiểm tra")');
     await wait(200);
     ok('Minigame Sự kiện: thứ tự sai bị báo lỗi', await page.isVisible('.mg-result.bad'));
     for (let target = 0; target < ORDER.length; target++) {
@@ -386,7 +386,7 @@ async function solveMinigame(page, career, wait) {
         await wait(50);
       }
     }
-    await page.click('text=Kiểm tra');
+    await page.click('.mg-foot button:has-text("Kiểm tra")');
   }
   await wait(400);
   ok(`Minigame ${career}: hoàn thành có điều kiện`, await page.isVisible('.mg-result.good'));
@@ -440,7 +440,7 @@ async function saveLoadTest() {
 }
 
 (async () => {
-  const routes = ROUTE === 'all' ? ['A', 'B', 'C', 'SECRET'] : ROUTE.split(',');
+  const routes = ROUTE === 'all' ? ['A', 'B', 'C', 'SECRET'] : ROUTE.split(',').filter((r) => ROUTES[r]);
   for (const r of routes) {
     try {
       await run(r);

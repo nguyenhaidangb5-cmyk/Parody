@@ -142,7 +142,7 @@ function NPC({ def }: { def: NpcDef }) {
     runtime.npcPos[def.id] = { x: s.x, z: s.z, y: s.y };
 
     // bảng tên
-    const showTag = distP < 7 && !far && !talking;
+    const showTag = distP < 7 && !far && !useGame.getState().ui.dialogue;
     tag.current.visible = showTag;
     if (showTag) {
       const o = Math.min(1, (7 - distP) / 2);

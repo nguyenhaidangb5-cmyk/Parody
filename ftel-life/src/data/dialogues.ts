@@ -13,6 +13,7 @@ function chain(id: string, lines: Line[], last?: Partial<DNode>) {
   lines.forEach((l, i) => {
     const nid = i === 0 ? id : `${id}#${i}`;
     const next = i < lines.length - 1 ? `${id}#${i + 1}` : undefined;
+    if (DIALOGUES[nid]) console.error('[dialogue] trùng id', nid);
     DIALOGUES[nid] = { who: l[0], text: l[1], next, ...(l[2] ?? {}) };
     lastId = nid;
   });
