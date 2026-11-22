@@ -312,7 +312,7 @@ async function run(routeKey, opts = {}) {
   await talk('hanh');
   if (routeKey === 'A') await shot('07-hall-prep');
   await talk('mai');
-  ok(`[${routeKey}] Hoàn thành chuẩn bị chương trình`, await questDone('q7'));
+  ok(`[${routeKey}] Hoàn thành chuẩn bị chương trình`, await questDone('q7'), JSON.stringify((await st()).save.quests.q7));
 
   // ===== CẢNH 8 – twist & kết =====
   await page.waitForFunction(() => window.__ftel.store.getState().ui.dialogue || window.__ftel.store.getState().screen === 'ending', null, { timeout: 15000 });
