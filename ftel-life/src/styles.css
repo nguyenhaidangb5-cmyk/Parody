@@ -1266,6 +1266,10 @@ kbd {
 .mg .btn.primary {
   color: #fff;
   border: 0;
+  background: linear-gradient(180deg, var(--orange-2), var(--orange));
+}
+.mg .btn.primary:disabled {
+  background: #ced4da;
 }
 .mg-result {
   margin-right: auto;

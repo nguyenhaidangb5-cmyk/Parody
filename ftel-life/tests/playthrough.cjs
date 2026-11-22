@@ -191,7 +191,8 @@ async function run(routeKey, opts = {}) {
   async function engage(kind, id) {
     for (let k = 0; k < 4; k++) {
       const near = await approach(kind, id);
-      await wait(500);
+      // đợi đủ lâu để vùng kích hoạt (đoạn dẫn chuyện khi vào phòng) kịp bật trên máy render CPU chậm
+      await wait(1500);
       if ((await st()).ui.dialogue) {
         await runDialogue();
         continue;
@@ -290,7 +291,6 @@ async function run(routeKey, opts = {}) {
   await talk('thu');
   ok(`[${routeKey}] Phá án bánh kem`, await questDone('q6'));
   await wait(1500);
-  if (R.secrets) await talk('thu'); // tin đồn về chú Tư
 
   // ===== CẢNH 7 – 16:59 =====
   await page.waitForFunction(() => window.__ftel.store.getState().ui.chat, null, { timeout: 10000 });
@@ -300,6 +300,7 @@ async function run(routeKey, opts = {}) {
   await page.click('.phone-foot .btn'); // chạy qua hội trường
   await wait(500);
   ok(`[${routeKey}] Group chat 16:59 hoạt động`, await objDone('q7', 'readChat'));
+  if (R.secrets) await talk('thu'); // tin đồn về chú Tư (sau vụ bánh)
   await talk('bap');
   // vào kho lấy micro
   await use('storageDoor');

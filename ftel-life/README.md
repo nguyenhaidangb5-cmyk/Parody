@@ -217,3 +217,22 @@ Quy ước nhanh:
 - Sau khi sửa: chạy `npm run validate` để bắt lỗi tham chiếu, rồi `npm run build`.
 
 Chạy lại kiểm thử tự động (cần Playwright + Chromium): `npm run build && npm run preview` (cửa sổ 1) → `npm run test:e2e` (cửa sổ 2).
+
+---
+
+## Kết quả lần chạy cuối (Chromium headless, render CPU)
+
+| Hạng mục | Kết quả |
+|---|---|
+| `npm install` · `npm run typecheck` · `npm run build` · `npm run validate` | ✅ đạt |
+| Tuyến A (Kinh doanh, chơi hợp lý) → **Kết thúc A** | ✅ 23/23 bước |
+| Tuyến B (Kỹ thuật, giải pháp sáng tạo) → **Kết thúc B** | ✅ đạt |
+| Tuyến C (CSKH, lựa chọn kỳ quặc) → **Kết thúc C** | ✅ đạt |
+| Tuyến SECRET (Marketing, tìm 5/6 bí mật chú Tư) → **Kết thúc bí mật** | ✅ đạt |
+| 4 minigame (kể cả trường hợp làm sai bị từ chối) | ✅ đạt |
+| Lưu & tải lại (nút Tiếp tục, nghề, nhiệm vụ, chỉ số, manh mối, vị trí) | ✅ đạt |
+| Lỗi JavaScript trong lúc chơi | ✅ không có |
+
+Hiệu năng đo được: ~250 draw call ngoài trời, ~450 draw call trong cảnh đông nhất (13 nhân vật + pháo giấy trong hội trường), ~250k tam giác.
+
+Ghi chú trung thực: lượt chạy toàn bộ đầu tiên có 2 lần trượt **do script kiểm thử** (một lần nhấn E trùng lúc đoạn dẫn chuyện tự động bật lên khi vào phòng; một lần script nói chuyện với NPC khi group chat đang mở). Đã sửa script và chạy lại các tuyến đó: đều đạt. Bản thân game không cần sửa cho 2 lỗi này – người chơi chỉ cần nhấn E lại.
